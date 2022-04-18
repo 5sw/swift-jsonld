@@ -61,13 +61,17 @@ public enum JSONLDError: Error {
 
 private extension URLSession {
     func synchronousDataTask(with url: URL) -> (Data?, URLResponse?, Error?) {
+        return synchronousDataTask(with: URLRequest(url: url))
+    }
+
+    func synchronousDataTask(with request: URLRequest) -> (Data?, URLResponse?, Error?) {
         var data: Data?
         var response: URLResponse?
         var error: Error?
 
         let semaphore = DispatchSemaphore(value: 0)
 
-        let dataTask = self.dataTask(with: url) {
+        let dataTask = self.dataTask(with: request) {
             data = $0
             response = $1
             error = $2
@@ -293,7 +297,9 @@ public class JSONLD {
     
     func loadDocument(url: URL, profile: String, requestProfile: Set<String>) -> (Data?, URLResponse?, Error?) {
         let session = URLSession.shared
-        return session.synchronousDataTask(with: url)
+        var request = URLRequest(url: url)
+        request.setValue("application/ld+json", forHTTPHeaderField: "Accept")
+        return session.synchronousDataTask(with: request)
     }
 
     func newContext(base url: URL) -> Context {
